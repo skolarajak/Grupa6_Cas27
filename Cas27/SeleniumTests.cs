@@ -3,6 +3,7 @@ using NUnit.Framework;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Firefox;
+using EC = SeleniumExtras.WaitHelpers.ExpectedConditions;
 
 namespace Cas27
 {
@@ -10,8 +11,14 @@ namespace Cas27
     {
         IWebDriver driver;
 
-        private string TestData_Email = "korisnik@1234567890.comm";
-        private string TestData_Password = "NekaJakaSifra";
+        WebDriverWait wait;
+
+        private string TestData_Email = UsefulFunctions.RandomEmail();
+        private string TestData_Password = UsefulFunctions.RandomPassword();
+
+        [Test]        public void Search()        {
+            IWebElement buttonSearch = driver.FindElement(By.Name("submit_search"));            if (buttonSearch.Displayed && buttonSearch.Enabled)            {                IWebElement searchInput = driver.FindElement(By.Name("search_query"));                if (searchInput.Displayed && searchInput.Enabled)                {                    searchInput.SendKeys("faded");                }                buttonSearch.Click();                Assert.Pass();                System.Threading.Thread.Sleep(5000);            }        }
+
 
         [Test]
         public void TestHomePage()
@@ -61,8 +68,8 @@ namespace Cas27
                 createButton.Click();
             }
 
-            System.Threading.Thread.Sleep(2000);
-            IWebElement form_firstName = driver.FindElement(By.Name("customer_firstname"));
+            IWebElement form_firstName = wait.Until(EC.ElementIsVisible(By.Name("customer_firstname")));
+
             if (form_firstName.Displayed && form_firstName.Enabled)
             {
                 form_firstName.SendKeys("Probnoime");
@@ -93,6 +100,9 @@ namespace Cas27
                 if (form_city.Enabled) form_city.SendKeys("Grad");
 
                 IWebElement form_state = driver.FindElement(By.Name("id_state"));
+
+                wait.Until(EC.ElementExists(By.XPath("//option[@value='50']")));
+
                 if (form_state.Enabled)
                 {
                     SelectElement state = new SelectElement(form_state);
@@ -120,7 +130,7 @@ namespace Cas27
 
         public void ClickOnSignInLink()
         {
-            IWebElement signin = driver.FindElement(By.LinkText("Sign in"));
+            IWebElement signin = wait.Until(EC.ElementIsVisible(By.LinkText("Sign in")));
             if (signin.Displayed && signin.Enabled)
             {
                 signin.Click();
@@ -131,6 +141,7 @@ namespace Cas27
         public void SetUp()
         {
             driver = new FirefoxDriver();
+            wait = new WebDriverWait(driver, new TimeSpan(0, 0, 30));
             driver.Manage().Window.Maximize();
             driver.Navigate().GoToUrl("http://automationpractice.com/index.php");
         }
