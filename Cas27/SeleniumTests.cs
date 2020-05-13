@@ -4,6 +4,8 @@ using OpenQA.Selenium;
 using OpenQA.Selenium.Support.UI;
 using OpenQA.Selenium.Firefox;
 using EC = SeleniumExtras.WaitHelpers.ExpectedConditions;
+using System.Threading;
+using System.Collections.ObjectModel;
 
 namespace Cas27
 {
@@ -16,8 +18,84 @@ namespace Cas27
         private string TestData_Email = UsefulFunctions.RandomEmail();
         private string TestData_Password = UsefulFunctions.RandomPassword();
 
-        [Test]        public void Search()        {
-            IWebElement buttonSearch = driver.FindElement(By.Name("submit_search"));            if (buttonSearch.Displayed && buttonSearch.Enabled)            {                IWebElement searchInput = driver.FindElement(By.Name("search_query"));                if (searchInput.Displayed && searchInput.Enabled)                {                    searchInput.SendKeys("faded");                }                buttonSearch.Click();                Assert.Pass();                System.Threading.Thread.Sleep(5000);            }        }
+        [Test]
+        public void Search()
+        {
+            IWebElement buttonSearch = driver.FindElement(By.Name("submit_search"));
+            if (buttonSearch.Displayed && buttonSearch.Enabled)
+            {
+                IWebElement searchInput = driver.FindElement(By.Name("search_query"));
+                if (searchInput.Displayed && searchInput.Enabled)
+                {
+                    searchInput.SendKeys("faded");
+                }
+
+                buttonSearch.Click();
+
+                IWebElement listOfItems = wait.Until(EC.ElementIsVisible(By.ClassName("product_list")));
+                //ReadOnlyCollection<IWebElement> listItems = listOfItems.FindElements(By.TagName("li"));
+                //if (listItems[0].Displayed && listItems[0].Enabled)
+                //{
+                //    listItems[0].Click();
+                //}
+
+                IWebElement productImage = driver.FindElement(By.XPath("//img[@title='Faded Short Sleeve T-shirts']"));
+                if (productImage.Displayed && productImage.Enabled)
+                {
+                    productImage.Click();
+                }
+
+                IWebElement addToCart = driver.FindElement(By.XPath("//span[text()='Add to cart']"));
+                if (addToCart.Displayed && addToCart.Enabled)
+                {
+                    IWebElement quantity = driver.FindElement(By.Name("qty"));
+                    if (quantity.Displayed && quantity.Enabled)
+                    {
+                        quantity.Clear();
+                        quantity.SendKeys("2");
+                    }
+
+                    IWebElement size = driver.FindElement(By.XPath("//select[@name='group_1']"));
+                    if (size.Displayed && size.Enabled)
+                    {
+                        SelectElement sizeDropdown = new SelectElement(size);
+                        //sizeDropdown.SelectByValue("3");
+                        sizeDropdown.SelectByText("L");
+                    }
+
+                    IWebElement colorList = driver.FindElement(By.Id("color_to_pick_list"));
+                    if (colorList.Displayed && colorList.Enabled)
+                    {
+                        IWebElement colorPick = colorList.FindElement(By.Name("Blue"));
+                        if (colorPick.Displayed && colorPick.Enabled)
+                        {
+                            colorPick.Click();
+                        }
+                    }
+
+                    addToCart.Click();
+                }
+
+                try
+                {
+                    IWebElement verification = wait.Until(EC.ElementIsVisible(By.ClassName("icon-ok")));
+                    if (verification.Displayed)
+                    {
+                        IWebElement continueButton = driver.FindElement(By.XPath("//span[@title='Continue shopping']"));
+                        if (continueButton.Displayed && continueButton.Enabled)
+                        {
+                            continueButton.Click();
+                            Assert.Pass();
+                        }
+                    }
+                }
+                catch (WebDriverTimeoutException)
+                {
+                    Assert.Fail("Failed adding products to cart");
+                }
+
+            }
+        }
 
 
         [Test]
@@ -141,7 +219,7 @@ namespace Cas27
         public void SetUp()
         {
             driver = new FirefoxDriver();
-            wait = new WebDriverWait(driver, new TimeSpan(0, 0, 30));
+            wait = new WebDriverWait(driver, new TimeSpan(0, 0, 10));
             driver.Manage().Window.Maximize();
             driver.Navigate().GoToUrl("http://automationpractice.com/index.php");
         }
